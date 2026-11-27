@@ -1,0 +1,125 @@
+{
+ "generated": "2026-11-27 15:40 (seed)",
+ "quote_src": "聚源(种子)",
+ "cb": [
+  {
+   "code": "118077",
+   "price": 156.13,
+   "chg": 10.14,
+   "stockChg": 0.0,
+   "convValue": 53.29,
+   "premium": 166.0,
+   "amount": 5.23
+  },
+  {
+   "code": "127056",
+   "price": 111.35,
+   "chg": 1.69,
+   "stockChg": 0.0,
+   "convValue": 94.3,
+   "premium": 16.1,
+   "amount": 1.4
+  },
+  {
+   "code": "127040",
+   "price": 112.3,
+   "chg": 2.55,
+   "stockChg": 0.0,
+   "convValue": 101.4,
+   "premium": 8.0,
+   "amount": 0.62
+  },
+  {
+   "code": "127049",
+   "price": 102.8,
+   "chg": 0.98,
+   "stockChg": 0.0,
+   "convValue": 65.45,
+   "premium": 55.5,
+   "amount": 0.83
+  },
+  {
+   "code": "127047",
+   "price": 120.36,
+   "chg": 2.76,
+   "stockChg": 5.86,
+   "convValue": 97.06,
+   "premium": 20.7,
+   "amount": 0.17
+  },
+  {
+   "code": "127050",
+   "price": 119.41,
+   "chg": 2.98,
+   "stockChg": 2.18,
+   "convValue": 96.25,
+   "premium": 20.5,
+   "amount": 0.67
+  },
+  {
+   "code": "127045",
+   "price": 111.09,
+   "chg": 1.64,
+   "stockChg": -1.06,
+   "convValue": 99.77,
+   "premium": 9.6,
+   "amount": 2.36
+  },
+  {
+   "code": "113691",
+   "price": 115.87,
+   "chg": 3.08,
+   "stockChg": 0.0,
+   "convValue": 91.5,
+   "premium": 22.9,
+   "amount": 3.01
+  },
+  {
+   "code": "123107",
+   "price": 109.2,
+   "chg": 0.18,
+   "stockChg": 0.0,
+   "convValue": 105.72,
+   "premium": 3.1,
+   "amount": 2.37
+  },
+  {
+   "code": "118076",
+   "price": 160.0,
+   "chg": 15.79,
+   "stockChg": 0.0,
+   "convValue": 61.52,
+   "premium": 124.6,
+   "amount": 4.33
+  },
+  {
+   "code": "113058",
+   "price": 115.74,
+   "chg": 3.34,
+   "stockChg": 0.0,
+   "convValue": 95.09,
+   "premium": 17.8,
+   "amount": 0.8
+  },
+  {
+   "code": "127061",
+   "price": 85.27,
+   "chg": 2.82,
+   "stockChg": 3.23,
+   "convValue": 80.4,
+   "premium": 3.1,
+   "amount": 1.3
+  },
+  {
+   "code": "118070",
+   "price": 130.84,
+   "chg": 7.3,
+   "stockChg": 0.0,
+   "convValue": 59.83,
+   "premium": 103.8,
+   "amount": 1.86
+  }
+ ],
+ "ann": [],
+ "event_base": "2026-11-27"
+}

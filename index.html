@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可转债跟踪工作台</title>
+<style>
+:root{
+  --navy:#0b1f3a; --navy2:#12325c; --blue:#1a6fe8; --blue-l:#e8f1ff;
+  --red:#e23c3c; --green:#0f9d58; --orange:#f59e0b; --bg:#f3f6fb; --card:#fff;
+  --line:#e5eaf2; --txt:#1f2d3d; --sub:#7b8794;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+a{color:var(--blue);text-decoration:none}
+.up{color:var(--red)} .down{color:var(--green)} .flat{color:var(--sub)}
+.topbar{background:linear-gradient(90deg,var(--navy),var(--navy2));color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(10,30,60,.25)}
+.topbar-in{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:0 20px;height:56px}
+.logo{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700;letter-spacing:1px}
+.logo .mk{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#ffb300,#ff7a00);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
+.topbar .date{font-size:12px;opacity:.75}
+.nav{display:flex;gap:4px;margin-left:14px;flex-wrap:wrap}
+.nav button{background:none;border:none;color:#c7d4e8;font-size:14px;padding:8px 14px;border-radius:8px;cursor:pointer}
+.nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav button.on{color:#fff;background:var(--blue)}
+.top-act{margin-left:auto;display:flex;gap:8px}
+.top-act button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px}
+.top-act button:hover{background:rgba(255,255,255,.22)}
+.mstrip{background:#fff;border-bottom:1px solid var(--line)}
+.mstrip-in{max-width:1400px;margin:0 auto;display:flex;gap:28px;padding:8px 20px;font-size:12.5px;overflow-x:auto;white-space:nowrap}
+.mstrip b{margin-left:5px}
+.wrap{max-width:1400px;margin:18px auto;padding:0 20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+.kpi.k-red::before{background:var(--red)} .kpi.k-green::before{background:var(--green)}
+.kpi.k-orange::before{background:var(--orange)} .kpi.k-purple::before{background:#8b5cf6}
+.kpi .t{color:var(--sub);font-size:12px}
+.kpi .v{font-size:24px;font-weight:700;margin-top:4px;font-family:"DIN Alternate",Arial}
+.kpi .s{font-size:11.5px;color:var(--sub);margin-top:3px}
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h3{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--blue)}
+canvas{width:100%}
+.view{display:none} .view.on{display:block}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;outline:none}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--blue)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:var(--sub)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.warn.on{background:var(--red);border-color:var(--red)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:1250px}
+thead th{background:#f7f9fc;color:#55637a;font-weight:600;padding:9px 8px;text-align:right;cursor:pointer;user-select:none;white-space:nowrap}
+thead th:first-child,thead th.l{text-align:left}
+thead th:hover{color:var(--blue)}
+tbody td{padding:8px;border-top:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody td:first-child,tbody td.l{text-align:left}
+tbody tr:hover{background:#f4f8ff}
+.star{cursor:pointer;font-size:15px;color:#c8d0dc}
+.star.on{color:#f5a623}
+.nm{font-weight:600}
+.nm small{display:block;color:var(--sub);font-weight:400;font-size:11px}
+.rate{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11.5px;font-weight:600}
+.rAAA{background:#e23c3c22;color:#c22} .rAAp{background:#f59e0b22;color:#b45309}
+.rAA{background:#1a6fe822;color:#155bbf} .rAAm{background:#0ea5e922;color:#0369a1}
+.rLow{background:#64748b22;color:#475569} .rBad{background:#111;color:#fff}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;margin-left:4px;font-weight:600}
+.t-red{background:#fdecec;color:#c22} .t-orange{background:#fff4e0;color:#b45309}
+.t-blue{background:#e8f1ff;color:#155bbf} .t-green{background:#e6f6ee;color:#0b7a44}
+.dlow-hi{background:#e6f6ee} .dlow-lo{background:#fdecec}
+.muted{color:var(--sub)}
+.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.al{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+.al h4{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.al li{list-style:none;padding:6px 0;border-top:1px dashed var(--line);font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.al li:first-of-type{border-top:none}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,25,50,.5);z-index:100;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:14px;width:min(680px,94vw);max-height:86vh;overflow:auto;padding:20px}
+.modal h3{margin-bottom:10px}
+.modal textarea{width:100%;height:220px;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Consolas,monospace;font-size:12px}
+.modal .row{display:flex;gap:10px;margin-top:12px;justify-content:flex-end}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:13px}
+.btn.ghost{background:#fff;color:var(--txt);border:1px solid var(--line)}
+.hint{font-size:12px;color:var(--sub);line-height:1.7;background:#f7f9fc;border-radius:8px;padding:8px 10px;margin-top:8px}
+footer{text-align:center;color:var(--sub);font-size:12px;padding:24px 0 34px;line-height:1.8}
+.empty{padding:26px;text-align:center;color:var(--sub)}
+#liveToast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:99;padding:10px 18px;border-radius:8px;font-size:13px;color:#fff;opacity:0;transition:.3s;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:86%;text-align:center}
+#liveToast.show{opacity:1}
+#liveToast.ok{background:#1f9d55}
+#liveToast.err{background:#d64541}
+.top-act .live{background:#1f9d55;border-color:#1f9d55}
+.top-act .live:disabled{opacity:.55;cursor:wait}
+.autolabel{font-size:12px;opacity:.85;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.evnote{background:#fff8e6;border:1px solid #f0d48a;color:#8a6d1a;border-radius:8px;padding:9px 14px;font-size:12.5px;margin-bottom:12px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="logo"><div class="mk">债</div>可转债跟踪工作台<span class="date" id="today"></span></div>
+    <div class="nav" id="nav">
+      <button data-v="v-home" class="on">市场总览</button>
+      <button data-v="v-table">行情看板</button>
+      <button data-v="v-focus">🎯 重点监控</button>
+      <button data-v="v-redeem">强赎监控</button>
+      <button data-v="v-mature">临期提醒</button>
+      <button data-v="v-revise">下修监控</button>
+      <button data-v="v-mine">我的自选</button>
+    </div>
+    <div class="top-act">
+      <button class="live" id="btnLive" onclick="liveUpdate()">⟳ 刷新行情</button>
+      <label class="autolabel" title="勾选后页面打开期间每60秒自动刷新一次"><input type="checkbox" id="autoTick" onchange="autoTick(this.checked)">自动60s</label>
+      <button onclick="openImport()">导入数据</button>
+      <button onclick="exportCSV()">导出CSV</button>
+    </div>
+  </div>
+</div>
+
+<div class="mstrip"><div class="mstrip-in" id="mstrip"></div></div>
+
+<div class="wrap">
+
+<div class="view on" id="v-home"><div class="evnote"></div><div class="card"><h3>📢 最新公告（云端每日自动抓取，近 14 天）</h3><div id="annFeed"><p class="muted" style="font-size:13px">本地打开时无云端数据；部署到云端后此处自动显示每日抓到的公告。</p></div></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2">
+    <div class="card"><h3>双低值分布（价格 + 转股溢价率）</h3><canvas id="chartDlow" height="170"></canvas></div>
+    <div class="card"><h3>评级分布 & 价格中位数</h3><canvas id="chartRate" height="170"></canvas></div>
+  </div>
+  <div class="alerts" id="homeAlerts"></div>
+</div>
+
+<div class="view" id="v-table">
+  <div class="card">
+    <div class="toolbar">
+      <input id="q" placeholder="搜索转债/正股名称、代码…" style="width:230px">
+      <select id="fRate"><option value="">全部评级</option></select>
+      <select id="fPrice">
+        <option value="">价格不限</option><option value="0,100">&lt;100</option>
+        <option value="100,110">100–110</option><option value="110,120">110–120</option>
+        <option value="120,130">120–130</option><option value="130,999">&gt;130</option>
+      </select>
+      <select id="fPrem">
+        <option value="">溢价率不限</option><option value="0,10">&lt;10%</option>
+        <option value="10,20">10–20%</option><option value="20,30">20–30%</option><option value="30,999">&gt;30%</option>
+      </select>
+      <select id="fYear">
+        <option value="">剩余期限不限</option><option value="0,1">&lt;1年</option>
+        <option value="1,2">1–2年</option><option value="2,4">2–4年</option><option value="4,9">≥4年</option>
+      </select>
+      <div class="chips" id="tagChips">
+        <span class="chip" data-t="star">★ 自选</span>
+        <span class="chip warn" data-t="redeem">临近强赎</span>
+        <span class="chip warn" data-t="maturity">临期</span>
+        <span class="chip" data-t="revise">下修动态</span>
+        <span class="chip warn" data-t="risk">风险警示</span>
+        <span class="chip" data-t="new">次新</span>
+        <span class="chip" data-t="watch">🎯 重点监控</span>
+      </div>
+      <span class="muted" id="cnt"></span>
+    </div>
+    <div class="tbl-wrap"><table id="mainTbl"></table></div>
+  </div>
+</div>
+
+<div class="view" id="v-focus"><div class="evnote"></div>
+  <div class="kpis" id="focusKpi"></div>
+  <div class="card" style="margin-bottom:14px">
+    <h3>重点监控转债（13 只 · 行情 11-27 盘中，估值 11-26 收盘）</h3>
+    <div class="tbl-wrap"><table id="focusTbl" style="min-width:1200px"></table></div>
+  </div>
+  <div class="alerts" id="focusAlerts"></div>
+</div>
+
+<div class="view" id="v-redeem"><div class="evnote"></div><div class="card"><h3>强赎进度监控（正股价 ≥ 转股价×130% 计数）</h3><div class="tbl-wrap"><table id="redeemTbl" style="min-width:800px"></table></div></div></div>
+
+<div class="view" id="v-mature"><div class="evnote"></div><div class="card"><h3>临期转债监测（重点监控清单 · 13 只，按剩余天数排序）</h3><p class="muted" style="margin-bottom:10px;font-size:12.5px">仅监测您清单内的 13 只转债；高亮行为剩余期限 &lt; 1 年的临期券，请关注到期兑付价、最后交易日与转股截止日。</p><div class="tbl-wrap"><table id="matureTbl" style="min-width:1000px"></table></div></div></div>
+
+<div class="view" id="v-revise"><div class="evnote"></div><div class="card"><h3>下修动态跟踪（重点监控清单 · 13 只）</h3><p class="muted" style="margin-bottom:10px;font-size:12.5px">仅监测您清单内的 13 只转债；转股价/触发价/正股价为 2026-11-26 数据，标注「估」的触发价按 85% 条款估算，其余为聚源库真实条款数据。</p><div class="tbl-wrap"><table id="reviseTbl" style="min-width:900px"></table></div></div></div>
+
+<div class="view" id="v-mine">
+  <div class="grid2" style="grid-template-columns:1fr 1fr">
+    <div class="card"><h3>自选清单</h3><div class="tbl-wrap"><table id="watchTbl" style="min-width:700px"></table></div></div>
+    <div class="card">
+      <h3>我的持仓</h3>
+      <div class="toolbar">
+        <select id="posSel" style="max-width:220px"></select>
+        <input id="posQty" type="number" placeholder="张数" style="width:90px">
+        <input id="posCost" type="number" placeholder="成本价" style="width:90px">
+        <button class="btn" onclick="addPos()">添加</button>
+      </div>
+      <div class="tbl-wrap"><table id="posTbl" style="min-width:640px"></table></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  可转债跟踪工作台 · 仅跟踪 13 只重点转债 · 数据基准日 2026-11-27（盘中）<br>
+  数据来源：恒生聚源金融数据库（债券实时行情 / 债券基本资料 / 可转债价值分析 / 转股价格调整 / 债券评级一览），行情 11-27 盘中约 13:41、估值 11-26 收盘；<br>
+  友发/南芯/先锋/莱特的修正触发价按 85% 条款估算，部分正股涨跌幅盘中未取到显示 0。点右上角「⟳ 刷新行情」可自动拉取最新价/涨跌幅（东方财富，失败自动切换腾讯通道；勾选「自动60s」可在页面打开期间每分钟自动刷新），也可用「导入数据」粘贴整表更新。本工具仅供研究参考，不构成投资建议。
+</footer>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>导入行情数据</h3>
+    <div class="hint">支持 <b>JSON 数组</b> 或 <b>CSV</b>。字段：code 代码, name 转债名, stockCode 正股代码, stockName 正股, rating 评级,<br>
+    price 价格, chg 转债涨跌幅%, stockChg 正股涨跌幅%, convValue 转股价值, premium 转股溢价率%, bondPrem 纯债溢价率%,<br>
+    size 剩余规模(亿), years 剩余年限, amount 成交额(亿), tags 标签(逗号分隔: redeem/maturity/revise/risk/new)<br>
+    示例：113043,财通转债,601108,财通证券,AAA,106.30,0.12,-0.58,105.7,0.6,0.9,38.0,0.03,2.10,maturity</div>
+    <textarea id="impText" placeholder="粘贴 JSON 或 CSV…"></textarea>
+    <div class="row">
+      <label class="muted" style="margin-right:auto;align-self:center"><input type="checkbox" id="impAppend"> 追加到现有数据</label>
+      <button class="btn ghost" onclick="closeImport()">取消</button>
+      <button class="btn" onclick="doImport()">导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== 数据（仅含 13 只重点转债，全部为真实数据：聚源库，行情 11-27 盘中、估值 11-26 收盘） ==================
+ 字段: [代码,转债名,正股代码,正股,评级,价格,转债涨跌幅,正股涨跌幅,转股价值,转股溢价率,纯债溢价率,剩余规模亿,剩余年限,成交额亿,标签] */
+let CB = [
+["118077","莱特转债","688150","莱特光电","AA",156.13,10.14,0,53.29,166.0,41.0,5.25,5.85,5.23,"watch,new,hot"],
+["127056","中特转债","000708","中信特钢","AAA",111.35,1.69,0,94.30,16.1,3.7,50.00,1.25,1.40,"watch,revise"],
+["127040","国泰转债","002091","江苏国泰","AA+",112.30,2.55,0,101.40,8.0,2.4,39.86,0.61,0.62,"watch,maturity"],
+["127049","希望转2","000876","新希望","AAA",102.80,0.98,0,65.45,55.5,-3.5,81.43,0.93,0.83,"watch,maturity,risk"],
+["127047","帝欧转债","002798","帝欧水华","BBB+",120.36,2.76,5.86,97.06,20.7,13.0,4.64,0.91,0.17,"watch,maturity,risk"],
+["127050","麒麟转债","002984","森麒麟","AA",119.41,2.98,2.18,96.25,20.5,7.1,20.86,0.96,0.67,"watch,maturity"],
+["127045","牧原转债","002714","牧原股份","AAA",111.09,1.64,-1.06,99.77,9.6,3.3,95.43,0.72,2.36,"watch,maturity"],
+["113691","和邦转债","603077","和邦生物","AA",115.87,3.08,0,91.50,22.9,6.1,45.99,3.92,3.01,"watch"],
+["123107","温氏转债","300498","温氏股份","AAA",109.20,0.18,0,105.72,3.1,1.4,77.06,0.34,2.37,"watch,maturity"],
+["118076","先锋转债","688605","先锋精科","AA",160.00,15.79,0,61.52,124.6,37.0,7.50,5.70,4.33,"watch,new,hot"],
+["113058","友发转债","601686","友发集团","AA",115.74,3.34,0,95.09,17.8,0.7,18.64,1.34,0.80,"watch"],
+["127061","美锦转债","000723","美锦能源","A",85.27,2.82,3.23,80.40,3.1,-24.7,27.74,1.40,1.30,"watch,risk"],
+["118070","南芯转债","688484","南芯科技","AA+",130.84,7.30,0,59.83,103.8,20.8,15.87,5.56,1.86,"watch,new"]
+];
+
+
+/* 事件类数据 */
+const REDEEM_NOTES = {"118077":"转股期 2027-04-12 才开始，当前无法触发强赎；溢价 166% 纯情绪炒作","118076":"转股期 2027-02-12 才开始，当前无法触发强赎；溢价 125% 高波动","118070":"转股期 2026-12-25 开始（临近），溢价 104%，开放后关注向双低回归","127050":"11-20 刚下修促转股，警惕后续满足 15/30 公告强赎","127056":"07-23 已下修，关注下修后强赎意愿"};
+const REVISE2 = [
+ ["127061","3.47","2.95","2.79","已触发","07-17 已下修 5.26→3.47；正股再度低于修正触发价，回售期（2026-04-20 起）内二次下修预期强"],
+ ["127049","10.13","8.10","6.63","已触发","正股深度低于修正触发价 8.10 及回售触发价 7.09，回售申报压力下下修博弈价值高，关注董事会/股东会公告"],
+ ["118070","43.71","≈37.15(估)","26.15","低于触发价(次新)","转股期 12-25 开放；正股深度低于修正触发价，若持续不振关注公司修正表态"],
+ ["118076","86.40","≈73.44(估)","≈53.2","低于触发价(次新)","转股期未开放（2027-02-12）；溢价 125%，中期存在修正可能"],
+ ["118077","44.62","≈37.93(估)","≈23.8","低于触发价(次新)","转股期未开放（2027-04-12）；纯情绪炒作，修正议题尚远"],
+ ["127050","13.32","11.32","12.82","已下修","11-20 下修 15.07→13.32（到底附近），下修后未再触发；临期促转股，警惕后续强赎计数"],
+ ["127056","13.69","10.95","12.91","已下修","07-23 大额下修 21.78→13.89（派现后 13.69），AAA 级下修较罕见，关注下修后强赎意愿"],
+ ["127047","5.10","4.08","4.95","已下修(前期)","2024-11 已下修至 5.10；评级下调至 BBB+，迷你券弹性大"],
+ ["113691","2.00","1.70","1.83","未触发","正股高于修正触发价约 8%，未触发；回售期 2028-10 开启前留意博弈"],
+ ["127040","7.15","6.08","7.25","未触发","11-13 派现后转股价 7.15；临期以促转股为主，下修必要性低"],
+ ["127045","43.32","34.66","43.22","未触发","转股价 43.32；偏股性、转股价值高，下修诉求低"],
+ ["113058","4.48","≈3.81(估)","4.26","未触发","债底型双低券，正股与转股价偏离温和，下修诉求低"]
+];
+
+
+
+/* ================== 工具 ================== */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const today=new Date('2026-11-27T15:00:00+08:00');
+$('#today').textContent=' 数据基准日 '+today.toLocaleDateString('zh-CN');
+const fmt=(x,d=2)=>x==null?'-':Number(x).toFixed(d);
+const pctCls=v=>v>0?'up':(v<0?'down':'flat');
+const pctTxt=v=>(v>0?'+':'')+fmt(v)+'%';
+let stars=JSON.parse(localStorage.getItem('cb_stars')||'[]');
+let positions=JSON.parse(localStorage.getItem('cb_pos')||'[]');
+const saveLS=()=>{localStorage.setItem('cb_stars',JSON.stringify(stars));localStorage.setItem('cb_pos',JSON.stringify(positions))};
+const rec=r=>({code:r[0],name:r[1],sc:r[2],sn:r[3],rating:r[4],price:r[5],chg:r[6],sc_chg:r[7],cv:r[8],prem:r[9],bp:r[10],size:r[11],years:r[12],amt:r[13],tags:(r[14]||'').split(',').filter(Boolean)});
+const dlow=r=>r.price+r.prem;
+
+/* ================== 重点监控清单 ================== */
+const FOCUS=["118077","127056","127040","127049","127047","127050","127045","113691","123107","118076","113058","127061","118070"];
+const FOCUS_FLAGS={
+ "127049":["回售条款已触发（正股<转股价70%）","下修博弈升温"],
+ "127061":["回售期内","预计触发二次下修","信用风险：YTM≈31%"],
+ "127047":["评级下调 AA-→BBB+","余额仅 4.6亿"],
+ "127050":["11-20 已下修至 13.32"],
+ "127056":["07-23 已下修 21.78→13.89"],
+ "118070":["12-25 开放转股"],
+ "118076":["转股期未开放（2027-02-12）"],
+ "118077":["转股期未开放（2027-04-12）"]
+};
+const WATCH_NOTES={
+ "118077":"2026-10-27 上市的次新券，今日 +10.1%；溢价 166%，纯情绪炒作，关注情绪退潮回落风险",
+ "118076":"2026-08-26 上市，今日 +15.8%；溢价 125%，高波动，转股期 2027-02-12 才开放",
+ "118070":"转股期 12-25 开放（临近！）；溢价 104%，开放后关注双低回归压力",
+ "127056":"已大额下修，AAA 债底稳；到期 2028-02-25，关注下修后强赎意愿",
+ "127040":"到期 2027-07-07（剩 ≈223 天）；溢价 8% 债性弱，关注促转股，到期赎回价 108 元",
+ "127049":"纯债溢价率 -3.5% 已破债底，YTM 5.5% 债底型；回售+下修双触发，重点跟踪公告",
+ "127047":"评级下调+缩量至 4.64 亿迷你券；正股今日 +5.9% 带动转股价值回升，临期促转股预期",
+ "127050":"11-20 刚下修，转股价值 96；到期 2027-11-11，下修后促转股意愿强，警惕满足 15/30 后公告强赎",
+ "127045":"到期 2027-08-16；溢价仅 9.6% 偏股性，重点跟踪牧原股价与月度转股进度",
+ "113691":"转股价 2.00，正股 1.83 仍在修正触发价 1.70 上方，下修条件未触发；临回售期（2028-10 起）前观察",
+ "123107":"到期 2027-03-29（仅剩 ≈123 天！）；溢价 3.1% 高转股价值，YTM -2.7%，重点盯最后交易日/兑付公告",
+ "113058":"到期 2028-03-30；债底溢价 0.7%、YTM 1.2%，防御性好，适合双低策略",
+ "127061":"A 评级+跌破面值+纯债溢价 -24.7%（YTM≈31%）；回售期已始，重大信用风险，仅适合高风险偏好博弈回售/下修"
+};
+
+/* ================== 导航 ================== */
+$('#nav').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  $$('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.view').forEach(v=>v.classList.remove('on'));
+  $('#'+b.dataset.v).classList.add('on');
+});
+
+/* ================== 市场速览条 ================== */
+function strip(){
+  const recs=CB.map(rec), ps=recs.map(r=>r.price).sort((a,b)=>a-b);
+  const med=arr=>{const m=arr.length>>1;return arr.length%2?arr[m]:(arr[m-1]+arr[m])/2};
+  const items=[
+    ['转债中位数价格',fmt(med(ps)),''],
+    ['中位数转股溢价率',fmt(med(recs.map(r=>r.prem)),1)+'%',''],
+    ['中位数双低',fmt(med(recs.map(dlow)),1),''],
+    ['收盘价>130 只数',recs.filter(r=>r.price>130).length+' 只',''],
+    ['收盘价<100 只数',recs.filter(r=>r.price<100).length+' 只',''],
+    ['今日平均涨幅',pctTxt(recs.reduce((s,r)=>s+r.chg,0)/recs.length), recs.reduce((s,r)=>s+r.chg,0)>0?'up':'down'],
+    ['成交额合计',fmt(recs.reduce((s,r)=>s+r.amt,0),0)+' 亿',''],
+    ['数据基准','2026-11-27','']
+  ];
+  $('#mstrip').innerHTML=items.map(([k,v,c])=>`<span class="muted">${k}<b class="${c}">${v}</b></span>`).join('');
+}
+
+/* ================== KPI ================== */
+function kpis(){
+  const recs=CB.map(rec);
+  const n=recs.length;
+  const cnt=t=>recs.filter(r=>r.tags.includes(t)).length;
+  const d=dlowArr=>{const a=[...dlowArr].sort((x,y)=>x-y);const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2};
+  const medD=d(recs.map(dlow));
+  const data=[
+    ['可转债总数',n,'只','正常券 '+recs.filter(r=>!r.tags.includes('risk')).length+' 只',''],
+    ['双低中位数',fmt(medD,1),'','<115 视为低估区','k-green'],
+    ['价格中位数',fmt((()=>{const a=recs.map(r=>r.price).sort((x,y)=>x-y);const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2})()),'','>130：'+recs.filter(r=>r.price>130).length+' 只 / <100：'+recs.filter(r=>r.price<100).length+' 只',''],
+    ['临近强赎',cnt('redeem'),'只','计数中/公告强赎','k-orange'],
+    ['重点临期(<1年)',FOCUS.filter(c=>{const r=CB.find(x=>x[0]===c);return r&&r[12]<1}).length,'只','重点清单内，注意到期兑付','k-red'],
+    ['风险警示券',cnt('risk'),'只','低评级/违约风险','k-red'],
+    ['今日自选',stars.length,'只','点表格 ★ 加入自选','k-purple']
+  ];
+  $('#kpis').innerHTML=data.map(([t,v,u,s,c])=>`<div class="kpi ${c||''}"><div class="t">${t}</div><div class="v">${v}<span style="font-size:12px;color:var(--sub)"> ${u}</span></div><div class="s">${s}</div></div>`).join('');
+}
+
+/* ================== 首页提醒卡 ================== */
+function homeAlerts(){
+  const recs=CB.map(rec);
+  const redeem=recs.filter(r=>r.tags.includes('redeem'));
+  const mature=recs.filter(r=>r.years<0.5&&FOCUS.includes(r.code)).sort((a,b)=>a.years-b.years);
+  const risk=recs.filter(r=>r.tags.includes('risk')).sort((a,b)=>a.price-b.price);
+  const dl=(name,code)=>`<span class="nm">${name}<small>${code}</small></span>`;
+  const cards=[
+    {t:'🔥 临近强赎',color:'#e23c3c',rows:redeem.map(r=>[dl(r.name,r.code),`<span class="up">${fmt(r.price)}</span><span class="muted"> ${REDEEM_NOTES[r.code]||''}</span>`])},
+    {t:'⏰ 临期转债（重点清单内 <0.5年）',color:'#f59e0b',rows:mature.map(r=>[dl(r.name,r.code),`剩余 <b>${fmt(r.years*365,0)}天</b> · ${fmt(r.price)}`])},
+    {t:'⚠️ 风险警示',color:'#111',rows:risk.map(r=>[dl(r.name,r.code),`<span class="down">${fmt(r.price)}</span> <span class="rate ${rateCls(r.rating)}">${r.rating}</span>`])}
+  ];
+  $('#homeAlerts').innerHTML=cards.map(c=>`<div class="al"><h4><span class="dot" style="background:${c.color}"></span>${c.t}</h4>${
+    c.rows.length?c.rows.map(([a,b])=>`<li><span>${a}</span><span>${b}</span></li>`).join(''):'<li class="muted">暂无</li>'}</div>`).join('');
+}
+
+/* ================== 图表（原生canvas） ================== */
+function chartDlow(){
+  const cv=$('#chartDlow'),ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*2,H=cv.height=340;
+  const recs=CB.map(rec);
+  const bins=[100,110,120,130,140,150,170,200,999],labels=[],cnt=[];
+  for(let i=0;i<bins.length-1;i++){labels.push(bins[i]+'-'+(bins[i+1]>200?'':bins[i+1])+(bins[i+1]>200?'200+':''));cnt.push(0)}
+  recs.forEach(r=>{const d=dlow(r);for(let i=0;i<bins.length-1;i++){if(d<bins[i+1]){cnt[i]++;break}}});
+  const max=Math.max(...cnt),pad=46,bw=(W-pad-20)/cnt.length;
+  ctx.clearRect(0,0,W,H);
+  ctx.font='20px sans-serif';ctx.fillStyle='#7b8794';ctx.textAlign='center';
+  cnt.forEach((c,i)=>{
+    const h=(H-70)*c/max, x=pad+i*bw, y=H-40-h;
+    ctx.fillStyle=i<3?'#e23c3c':(i<5?'#f59e0b':'#1a6fe8');
+    ctx.globalAlpha=.85;ctx.fillRect(x+6,y,bw-16,h);ctx.globalAlpha=1;
+    ctx.fillStyle='#1f2d3d';ctx.fillText(c,x+bw/2-2,y-8);
+    ctx.fillStyle='#7b8794';ctx.fillText(labels[i],x+bw/2-2,H-14);
+  });
+  ctx.textAlign='left';ctx.fillStyle='#7b8794';ctx.fillText('只数',8,26);
+}
+function chartRate(){
+  const cv=$('#chartRate'),ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*2,H=cv.height=340;
+  const order=['AAA','AA+','AA','AA-','A+','A','A-','BBB+','BBB','BB+','CC','C'];
+  const map={};CB.map(rec).forEach(r=>map[r.rating]=(map[r.rating]||0)+1);
+  const keys=order.filter(k=>map[k]),max=Math.max(...keys.map(k=>map[k]));
+  ctx.clearRect(0,0,W,H);ctx.font='20px sans-serif';
+  const rh=30;
+  keys.forEach((k,i)=>{
+    const y=14+i*rh, w=(W-190)*map[k]/max;
+    ctx.fillStyle='#7b8794';ctx.textAlign='right';ctx.fillText(k,86,y+20);
+    ctx.fillStyle=rateColor(k);ctx.globalAlpha=.85;ctx.fillRect(96,y+4,w,20);ctx.globalAlpha=1;
+    ctx.fillStyle='#1f2d3d';ctx.textAlign='left';ctx.fillText(map[k],102+w,y+20);
+  });
+}
+const rateColor=r=>r.startsWith('AAA')?'#e23c3c':r==='AA+'?'#f59e0b':r==='AA'?'#1a6fe8':r==='AA-'?'#0ea5e9':(r.includes('B')||r==='C')?'#475569':'#94a3b8';
+const rateCls=r=>r==='AAA'?'rAAA':r==='AA+'?'rAAp':r==='AA'?'rAA':r==='AA-'?'rAAm':(r==='C'||r==='CC'||r.startsWith('B'))?'rBad':'rLow';
+
+/* ================== 主表格 ================== */
+const COLS=[
+ ['★','',0],['code','代码',0],['name','转债/正股',1],['rating','评级',0],['price','价格',0],['chg','涨跌幅',0],
+ ['sn2','正股涨跌',0],['cv','转股价值',0],['prem','溢价率',0],['bp','纯债溢价',0],['dlow','双低',0],
+ ['size','剩余规模',0],['years','剩余年限',0],['amt','成交额',0],['tags','标签',1]
+];
+let sortKey='price',sortAsc=true,tagFilters=new Set();
+function renderMain(){
+  const q=$('#q').value.trim().toLowerCase(), fr=$('#fRate').value, fp=$('#fPrice').value, fm=$('#fPrem').value, fy=$('#fYear').value;
+  let recs=CB.map(rec).filter(r=>{
+    if(q&&!(r.name+r.code+r.sn+r.sc).toLowerCase().includes(q))return false;
+    if(fr&&r.rating!==fr)return false;
+    if(fp){const[a,b]=fp.split(',').map(Number);if(r.price<a||r.price>=b)return false}
+    if(fm){const[a,b]=fm.split(',').map(Number);if(r.prem<a||r.prem>=b)return false}
+    if(fy){const[a,b]=fy.split(',').map(Number);if(r.years<a||r.years>=b)return false}
+    if(tagFilters.has('star')&&!stars.includes(r.code))return false;
+    for(const t of tagFilters){if(t!=='star'&&!r.tags.includes(t))return false}
+    return true;
+  });
+  recs.sort((a,b)=>{
+    let va,vb;
+    if(sortKey==='dlow'){va=dlow(a);vb=dlow(b)}
+    else if(sortKey==='sn2'){va=a.sc_chg;vb=b.sc_chg}
+    else{va=a[sortKey];vb=b[sortKey]}
+    if(typeof va==='string')return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    return sortAsc?va-vb:vb-va;
+  });
+  $('#cnt').textContent=`共 ${recs.length} 只`;
+  const tagHtml=r=>{
+    const m={redeem:'<span class="tag t-red">临近强赎</span>',maturity:'<span class="tag t-orange">临期</span>',revise:'<span class="tag t-blue">下修动态</span>',risk:'<span class="tag t-red">风险</span>',new:'<span class="tag t-green">次新</span>',hot:'<span class="tag t-red">热门</span>',ann:'<span class="tag t-blue">不赎回</span>',watch:'<span class="tag t-blue">重点</span>'};
+    return r.tags.map(t=>m[t]||'').join('');
+  };
+  const dlowVals=recs.map(dlow).sort((a,b)=>a-b);
+  const q1=dlowVals[Math.floor(dlowVals.length*.25)]||0,q3=dlowVals[Math.floor(dlowVals.length*.75)]||1e9;
+  let html='<thead><tr>'+COLS.map(([k,t,l])=>`<th class="${l?'l':''}" data-k="${k}">${t}${sortKey===k?(sortAsc?' ▲':' ▼'):''}</th>`).join('')+'</tr></thead><tbody>';
+  html+=recs.map(r=>{
+    const d=dlow(r), cls=d<=q1?'dlow-hi':(d>=q3?'dlow-lo':'');
+    return `<tr class="${cls}">
+      <td><span class="star ${stars.includes(r.code)?'on':''}" data-c="${r.code}">${stars.includes(r.code)?'★':'☆'}</span></td>
+      <td class="muted">${r.code}</td>
+      <td class="l nm">${r.name}<small>${r.sn} ${r.sc}</small></td>
+      <td><span class="rate ${rateCls(r.rating)}">${r.rating}</span></td>
+      <td><b>${fmt(r.price)}</b></td>
+      <td class="${pctCls(r.chg)}">${pctTxt(r.chg)}</td>
+      <td class="${pctCls(r.sc_chg)}">${pctTxt(r.sc_chg)}</td>
+      <td>${fmt(r.cv)}</td>
+      <td>${fmt(r.prem,1)}%</td>
+      <td class="${r.bp<0?'down':''}">${fmt(r.bp,1)}%</td>
+      <td><b>${fmt(d,1)}</b></td>
+      <td>${fmt(r.size,1)}</td>
+      <td>${fmt(r.years,2)}</td>
+      <td>${fmt(r.amt,2)}</td>
+      <td class="l">${tagHtml(r)}</td></tr>`;
+  }).join('');
+  html+='</tbody>';
+  const tbl=$('#mainTbl');tbl.innerHTML=html;
+  tbl.querySelectorAll('th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;if(k==='★')return;
+    if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=!['price','amt','dlow','prem','size'].includes(k)}
+    renderMain();
+  });
+  tbl.querySelectorAll('.star').forEach(s=>s.onclick=()=>{
+    const c=s.dataset.c;
+    stars=stars.includes(c)?stars.filter(x=>x!==c):[...stars,c];
+    saveLS();renderMain();kpis();renderWatch();
+  });
+}
+['q','fRate','fPrice','fPrem','fYear'].forEach(id=>$('#'+id).addEventListener('input',renderMain));
+$('#tagChips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  const t=c.dataset.t;
+  tagFilters.has(t)?tagFilters.delete(t):tagFilters.add(t);
+  c.classList.toggle('on');renderMain();
+});
+function initRateFilter(){
+  const rs=[...new Set(CB.map(r=>r[4]))];
+  const order=['AAA','AA+','AA','AA-','A+','A','A-','BBB+','BBB','BB+','CC','C'];
+  rs.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  $('#fRate').innerHTML='<option value="">全部评级</option>'+rs.map(r=>`<option>${r}</option>`).join('');
+}
+
+/* ================== 重点监控 ================== */
+function renderFocus(){
+  const map={};CB.map(rec).forEach(r=>map[r.code]=r);
+  const list=FOCUS.filter(c=>map[c]).map(c=>map[c]);
+  const lowPar=list.filter(r=>r.price<100).length, nearM=list.filter(r=>r.years<1).length,
+        hiPrem=list.filter(r=>r.prem>=50).length, noConv=["118076","118077"].length;
+  $('#focusKpi').innerHTML=[
+    ['重点监控转债',list.length,'只','用户自定义清单',''],
+    ['临期（<1年）',nearM,'只','温氏/国泰/牧原/帝欧/希望/麒麟','k-orange'],
+    ['破面/破债底',lowPar,'只','美锦转债（另希望转2债底溢价为负）','k-red'],
+    ['超高溢价（>50%）',hiPrem,'只','莱特 166% / 先锋 125% / 南芯 104%','k-purple'],
+    ['转股期未开放',noConv,'只','先锋、莱特，无法强赎也无法转股','k-red']
+  ].map(([t,v,u,s,c])=>`<div class="kpi ${c}"><div class="t">${t}</div><div class="v">${v}<span style="font-size:12px;color:var(--sub)"> ${u}</span></div><div class="s">${s}</div></div>`).join('');
+  const flags=r=>{
+    const f=[...(FOCUS_FLAGS[r.code]||[])];
+    if(r.price<100)f.push('跌破面值');
+    if(r.bp<0)f.push('破债底');
+    if(r.years<1)f.push('临期 '+Math.round(r.years*365)+'天');
+    if(r.prem>=50)f.push('超高溢价');
+    if(r.size<5)f.push('迷你券');
+    return f;
+  };
+  $('#focusTbl').innerHTML='<thead><tr><th class="l">转债/正股</th><th>评级</th><th>现价</th><th>涨跌幅</th><th>溢价率</th><th>双低</th><th>债底溢价</th><th>剩余规模</th><th>剩余天数</th><th class="l">风险标签</th><th class="l">监控要点</th></tr></thead><tbody>'+
+  list.map(r=>{
+    const f=flags(r);
+    return `<tr>
+      <td class="l nm">${r.name}<small>${r.sn} ${r.sc}</small></td>
+      <td><span class="rate ${rateCls(r.rating)}">${r.rating}</span></td>
+      <td><b class="${r.price<100?'down':''}">${fmt(r.price)}</b></td>
+      <td class="${pctCls(r.chg)}">${pctTxt(r.chg)}</td>
+      <td class="${r.prem>50?'up':''}">${fmt(r.prem,1)}%</td>
+      <td><b>${fmt(dlow(r),1)}</b></td>
+      <td class="${r.bp<0?'down':''}">${fmt(r.bp,1)}%</td>
+      <td>${fmt(r.size,1)}</td>
+      <td><b>${Math.round(r.years*365)}</b></td>
+      <td class="l">${f.map(x=>`<span class="tag ${/下修|回售|已下修/.test(x)?'t-blue':(/信用|面值|债底|未开放|溢价/.test(x)?'t-red':'t-orange')}">${x}</span>`).join('')}</td>
+      <td class="l muted" style="max-width:340px;white-space:normal">${WATCH_NOTES[r.code]||''}</td></tr>`;
+  }).join('')+'</tbody>';
+  $('#focusAlerts').innerHTML=`<div class="al"><h4><span class="dot" style="background:#e23c3c"></span>🚨 高风险</h4>
+    <li><span class="nm">美锦转债<small>127061</small></span><span class="down">A评级·破面·YTM 31%·回售期·二次下修预期</span></li>
+    <li><span class="nm">希望转2<small>127049</small></span><span class="down">正股已低于回售触发价 7.09</span></li>
+    <li><span class="nm">帝欧转债<small>127047</small></span><span class="down">评级下调至 BBB+，迷你券</span></li></div>
+    <div class="al"><h4><span class="dot" style="background:#f59e0b"></span>⏰ 临期促转股</h4>
+    <li><span class="nm">温氏转债<small>123107</small></span><span>剩 ≈123 天，溢价仅 3.1%</span></li>
+    <li><span class="nm">国泰转债<small>127040</small></span><span>剩 ≈223 天，溢价 8%</span></li>
+    <li><span class="nm">牧原转债<small>127045</small></span><span>剩 ≈263 天，溢价 9.6%</span></li>
+    <li><span class="nm">帝欧/希望/麒麟</span><span>剩 333～350 天</span></li></div>
+    <div class="al"><h4><span class="dot" style="background:#8b5cf6"></span>🎰 高溢价次新（无法强赎）</h4>
+    <li><span class="nm">莱特转债<small>118077</small></span><span class="up">溢价 166% · 2027-04 才可转股</span></li>
+    <li><span class="nm">先锋转债<small>118076</small></span><span class="up">溢价 125% · 2027-02 才可转股</span></li>
+    <li><span class="nm">南芯转债<small>118070</small></span><span class="up">溢价 104% · 12-25 开放转股</span></li></div>
+    <div class="al"><h4><span class="dot" style="background:#0f9d58"></span>🔧 下修动态（本清单内）</h4>
+    <li><span class="nm">麒麟转债</span><span>11-20 已下修 15.07→13.32</span></li>
+    <li><span class="nm">中特转债</span><span>07-23 已下修 21.78→13.89</span></li>
+    <li><span class="nm">美锦转债</span><span>预计触发二次下修（正股 2.88 < 2.95）</span></li>
+    <li><span class="nm">和邦转债</span><span>下修未触发（1.83 > 1.70），留仓观察</span></li></div>`;
+}
+
+/* ================== 强赎 / 临期 / 下修 ================== */
+function renderRedeem(){
+  const recs=CB.map(rec).filter(r=>r.tags.includes('redeem')||r.tags.includes('ann')||REDEEM_NOTES[r.code]);
+  $('#redeemTbl').innerHTML='<thead><tr><th class="l">转债</th><th>代码</th><th>评级</th><th>价格</th><th>溢价率</th><th class="l">正股</th><th class="l">状态 / 备注</th></tr></thead><tbody>'+
+  (recs.length?recs.map(r=>`<tr><td class="l nm">${r.name}</td><td class="muted">${r.code}</td><td><span class="rate ${rateCls(r.rating)}">${r.rating}</span></td><td><b>${fmt(r.price)}</b></td><td>${fmt(r.prem,1)}%</td><td class="l">${r.sn}</td><td class="l muted">${REDEEM_NOTES[r.code]||'—'}</td></tr>`).join(''):'<tr><td colspan=7 class="empty">暂无强赎计数中的转债</td></tr>')+'</tbody>';
+}
+function renderMature(){
+  const MDATE={"118077":"2032-09-29","127056":"2028-02-25","127040":"2027-07-07","127049":"2027-11-02","127047":"2027-10-25","127050":"2027-11-11","127045":"2027-08-16","113691":"2030-10-28","123107":"2027-03-29","118076":"2032-08-06","113058":"2028-03-30","127061":"2028-04-20","118070":"2032-06-18"};
+  const REDP={"127040":"到期赎回价 108 元/张","127047":"到期赎回价 115 元/张(含末利)"};
+  const fmap={};CB.map(rec).forEach(r=>fmap[r.code]=r);
+  const recs=FOCUS.filter(c=>fmap[c]).map(c=>fmap[c]).sort((a,b)=>a.years-b.years);
+  $('#matureTbl').innerHTML='<thead><tr><th class="l">转债</th><th>代码</th><th>评级</th><th>价格</th><th>转股溢价</th><th>纯债溢价</th><th>到期日</th><th>剩余(天)</th><th>剩余规模</th><th class="l">提示</th></tr></thead><tbody>'+
+  recs.map(r=>{
+    const d=Math.round(r.years*365),near=d<365;
+    let tip;
+    if(near&&d<200)tip='⚠ 高度临期，关注最后交易日/兑付公告';
+    else if(near)tip=r.prem<15?'溢价低、转股价值高，到期前促转股意愿强':'关注到期前转股与兑付安排';
+    else if(r.prem>=100)tip='转股期未开放或溢价极高，临期风险尚远';
+    else tip='期限充裕';
+    if(REDP[r.code])tip+='；'+REDP[r.code];
+    return `<tr ${near?'class="dlow-lo"':''}><td class="l nm">${r.name}</td><td class="muted">${r.code}</td><td><span class="rate ${rateCls(r.rating)}">${r.rating}</span></td><td><b class="${r.price<100?'down':(near&&r.price>115?'up':'')}">${fmt(r.price)}</b></td><td>${fmt(r.prem,1)}%</td><td class="${r.bp<0?'down':''}">${fmt(r.bp,1)}%</td><td>${MDATE[r.code]||'-'}</td><td><b>${d}</b></td><td>${fmt(r.size,1)}亿</td><td class="l muted" style="white-space:normal;max-width:300px">${tip}</td></tr>`;
+  }).join('')+'</tbody>';
+}
+function renderRevise(){
+  const cmap={};CB.map(rec).forEach(r=>cmap[r.code]=r);
+  const tagCls=t=>t.includes('已触发')?'t-red':(t.includes('低于触发')?'t-orange':(t.includes('已下修')?'t-green':'t-blue'));
+  const rows=REVISE2.filter(r=>FOCUS.includes(r[0])&&cmap[r[0]]);
+  $('#reviseTbl').innerHTML='<thead><tr><th class="l">转债</th><th>代码</th><th>现价</th><th>转股溢价</th><th>转股价</th><th>修正触发价</th><th>正股价(11-26)</th><th>触发判断</th><th class="l">下修动态 / 备注</th></tr></thead><tbody>'+
+  rows.map(r=>{
+    const c=cmap[r[0]];
+    return `<tr><td class="l nm">${c.name}<small>${c.sn}</small></td><td class="muted">${r[0]}</td><td><b class="${c.price<100?'down':''}">${fmt(c.price)}</b></td><td>${fmt(c.prem,1)}%</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="tag ${tagCls(r[4])}" style="margin:0">${r[4]}</span></td><td class="l muted" style="white-space:normal;max-width:420px">${r[5]}</td></tr>`;
+  }).join('')+'</tbody>';
+}
+
+/* ================== 自选 & 持仓 ================== */
+function renderWatch(){
+  const recs=CB.map(rec).filter(r=>stars.includes(r.code));
+  $('#watchTbl').innerHTML='<thead><tr><th class="l">转债</th><th>评级</th><th>价格</th><th>涨跌幅</th><th>溢价率</th><th>双低</th><th></th></tr></thead><tbody>'+
+  (recs.length?recs.map(r=>`<tr><td class="l nm">${r.name}<small>${r.code}</small></td><td><span class="rate ${rateCls(r.rating)}">${r.rating}</span></td><td><b>${fmt(r.price)}</b></td><td class="${pctCls(r.chg)}">${pctTxt(r.chg)}</td><td>${fmt(r.prem,1)}%</td><td>${fmt(dlow(r),1)}</td><td><a href="javascript:;" onclick="toggleStar('${r.code}')">移除</a></td></tr>`).join(''):'<tr><td colspan=7 class="empty">在行情看板点击 ☆ 添加自选</td></tr>')+'</tbody>';
+  $('#posSel').innerHTML='<option value="">选择转债…</option>'+CB.map(r=>`<option value="${r[0]}">${r[1]} ${r[0]}</option>`).join('');
+}
+function toggleStar(c){stars=stars.includes(c)?stars.filter(x=>x!==c):[...stars,c];saveLS();renderMain();kpis();renderWatch()}
+function addPos(){
+  const code=$('#posSel').value,qty=+$('#posQty').value,cost=+$('#posCost').value;
+  if(!code||!qty||!cost)return alert('请填写完整');
+  positions.push({code,qty,cost});saveLS();renderPos();$('#posQty').value=$('#posCost').value='';
+}
+function renderPos(){
+  const map={};CB.map(rec).forEach(r=>map[r.code]=r);
+  let mv=0,cost=0;
+  const rows=positions.map((p,i)=>{
+    const r=map[p.code];if(!r)return '';
+    const v=r.price*p.qty/100,c=p.cost*p.qty/100;mv+=v;cost+=c;
+    const pnl=v-c;
+    return `<tr><td class="l nm">${r.name}<small>${p.qty}张 @${p.cost}</small></td><td><b>${fmt(r.price)}</b></td><td>${fmt(v,2)}万</td><td class="${pnl>=0?'up':'down'}">${(pnl>=0?'+':'')+fmt(pnl,2)}万（${fmt(pnl/c*100,2)}%）</td><td><a href="javascript:;" onclick="delPos(${i})">删除</a></td></tr>`;
+  }).join('');
+  const tot=mv-cost;
+  $('#posTbl').innerHTML='<thead><tr><th class="l">持仓</th><th>现价</th><th>市值(万)</th><th>盈亏</th><th></th></tr></thead><tbody>'+
+  (positions.length?rows+`<tr style="background:#f7f9fc;font-weight:700"><td class="l">合计</td><td></td><td>${fmt(mv,2)}</td><td class="${tot>=0?'up':'down'}">${(tot>=0?'+':'')+fmt(tot,2)}万</td><td></td></tr>`:'<tr><td colspan=5 class="empty">暂无持仓，上方添加</td></tr>')+'</tbody>';
+}
+function delPos(i){positions.splice(i,1);saveLS();renderPos()}
+
+/* ================== 导入 / 导出 ================== */
+const openImport=()=>$('#modal').classList.add('on');
+const closeImport=()=>$('#modal').classList.remove('on');
+function doImport(){
+  const txt=$('#impText').value.trim();if(!txt)return alert('请粘贴数据');
+  let rows=[];
+  try{
+    if(txt.startsWith('[')){
+      rows=JSON.parse(txt).map(o=>[o.code,o.name,o.stockCode||'',o.stockName||'',o.rating||'',+o.price,+o.chg||0,+o.stockChg||0,+o.convValue||0,+o.premium||0,+o.bondPrem||0,+o.size||0,+o.years||0,+o.amount||0,o.tags||'']);
+    }else{
+      rows=txt.split(/\r?\n/).filter(l=>l.trim()).map(l=>l.split(',').map(s=>s.trim()));
+      if(/code/i.test(rows[0][0]))rows=rows.slice(1);
+      rows=rows.map(a=>[a[0],a[1],a[2]||'',a[3]||'',a[4]||'',+a[5],+a[6]||0,+a[7]||0,+a[8]||0,+a[9]||0,+a[10]||0,+a[11]||0,+a[12]||0,+a[13]||0,a[14]||'']);
+    }
+    if(!rows.length)throw 0;
+  }catch(e){return alert('解析失败，请检查格式')}
+  CB=$('#impAppend').checked?CB.concat(rows):rows;
+  refreshAll();closeImport();$('#impText').value='';
+  alert('导入成功，共 '+CB.length+' 只转债');
+}
+function exportCSV(){
+  const head='代码,转债名称,正股代码,正股名称,评级,价格,涨跌幅,正股涨跌幅,转股价值,转股溢价率,纯债溢价率,剩余规模亿,剩余年限,成交额亿,标签';
+  const body=CB.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+head+'\n'+body],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='可转债数据_2026-11-27.csv';a.click();
+}
+
+/* ================== 事件数据时效提醒（公告类数据不随行情刷新） ================== */
+let EVENT_BASE='2026-11-27';
+function evDays(){
+  const d=Math.floor((new Date()-new Date(EVENT_BASE+'T00:00:00+08:00'))/86400000);
+  return d<=0?'今日为基准日':(d+' 天前');
+}
+function fillEvNotes(){
+  const txt='⚠ 公告类数据时效提醒：本页下修 / 强赎 / 评级 / 到期条款等事件数据基准日为 '+EVENT_BASE+'（'+evDays()+'），不随「⟳ 刷新行情」自动更新。期间若正股发布下修、赎回、评级等公告，请以上交所 / 深交所 / 巨潮资讯网最新公告为准，或让助手按聚源库重新核对后更新本文件。';
+  document.querySelectorAll('.evnote').forEach(el=>el.textContent=txt);
+}
+
+/* ================== 实时刷新（东方财富 → 腾讯行情 双通道） ================== */
+let QUOTE_SRC='',QUOTE_TIME='',_autoTimer=null;
+function toast(msg,type){
+  let t=document.getElementById('liveToast');
+  if(!t){t=document.createElement('div');t.id='liveToast';document.body.appendChild(t)}
+  t.textContent=msg;t.className='show '+(type||'ok');
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.className=''},5200);
+}
+function mktOf(code){return code.slice(0,2)==='11'?'1.':'0.'}
+function emFetch(){
+  if(!window.fetch) return Promise.reject();
+  const secids=CB.map(c=>mktOf(c[0])+c[0]).join(',');
+  const url='https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&secids='+secids+'&fields=f2,f3,f12';
+  const opt={};
+  try{if(window.AbortSignal&&AbortSignal.timeout)opt.signal=AbortSignal.timeout(6000)}catch(e){}
+  return fetch(url,opt).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{
+    const d=j&&j.data&&j.data.diff;if(!d)throw 0;
+    const arr=Array.isArray(d)?d:Object.values(d);
+    let n=0;
+    arr.forEach(o=>{
+      const row=CB.find(c=>c[0]===String(o.f12));if(!row)return;
+      const p=+o.f2,g=+o.f3;
+      if(isFinite(p)&&p>0){row[5]=p;if(isFinite(g))row[6]=g;n++}
+    });
+    if(!n)throw 0;return n;
+  });
+}
+function txFetch(){
+  return new Promise((res,rej)=>{
+    const q=CB.map(c=>(c[0].slice(0,2)==='11'?'sh':'sz')+c[0]).join(',');
+    const sc=document.createElement('script');sc.charset='GBK';
+    const to=setTimeout(()=>{sc.remove();rej()},6000);
+    sc.onerror=()=>{clearTimeout(to);rej()};
+    sc.onload=()=>{
+      clearTimeout(to);let n=0;
+      CB.forEach(c=>{
+        const v=window['v_'+(c[0].slice(0,2)==='11'?'sh':'sz')+c[0]];
+        if(typeof v!=='string')return;
+        const a=v.split('~'),p=parseFloat(a[3]),g=parseFloat(a[32]);
+        if(isFinite(p)&&p>0){c[5]=p;if(isFinite(g))c[6]=g;n++}
+      });
+      sc.remove();n?res(n):rej();
+    };
+    sc.src='https://qt.gtimg.cn/q='+q+'&_='+Date.now();
+    document.body.appendChild(sc);
+  });
+}
+function liveUpdate(){
+  const btn=document.getElementById('btnLive');
+  btn.disabled=true;btn.textContent='刷新中…';
+  const finish=(n,src)=>{
+    QUOTE_SRC=src;QUOTE_TIME=new Date().toLocaleTimeString('zh-CN',{hour12:false});
+    refreshAll();btn.disabled=false;btn.textContent='⟳ 刷新行情';
+    document.getElementById('today').textContent=' 行情 '+QUOTE_SRC+' '+QUOTE_TIME;
+    toast('✓ 已从'+src+'更新 '+n+'/13 只最新价与涨跌幅（'+QUOTE_TIME+'）。注意：下修/强赎/评级等公告数据停留在基准日 '+EVENT_BASE+'（'+evDays()+'），不随本次刷新，请以最新公告核对','ok');
+  };
+  const fail=()=>{
+    btn.disabled=false;btn.textContent='⟳ 刷新行情';
+    toast('✗ 自动刷新失败：本机浏览器拦截了接口请求（常见于以本地文件方式打开且网络受限）。可改用「导入数据」粘贴最新行情','err');
+  };
+  emFetch().then(n=>finish(n,'东方财富')).catch(()=>txFetch().then(n=>finish(n,'腾讯行情')).catch(fail));
+}
+function autoTick(on){
+  clearInterval(_autoTimer);
+  if(on){liveUpdate();_autoTimer=setInterval(liveUpdate,60000)}
+}
+
+/* ================== 初始化 ================== */
+function refreshAll(){
+  fillEvNotes();initRateFilter();strip();kpis();homeAlerts();renderMain();renderFocus();renderRedeem();renderMature();renderRevise();renderWatch();renderAnn();renderPos();chartDlow();chartRate();
+}
+
+/* ===== 云端数据加载（data.json：GitHub Actions 每个交易日约 08:30 生成） ===== */
+let ANN = []; let CLOUD_TIME = '';
+function renderAnn(){
+  const el = document.getElementById('annFeed'); if(!el) return;
+  if(!ANN.length){ el.innerHTML = '<p class="muted" style="font-size:13px">近 14 天未抓到 13 只重点转债相关公告（赎回/下修/回售/评级/兑付等）。</p>'; return; }
+  el.innerHTML = '<table style="width:100%"><thead><tr><th style="width:100px">日期</th><th style="width:100px">转债</th><th>公告标题（点击打开东方财富公告原文）</th></tr></thead><tbody>'
+    + ANN.map(a=>'<tr><td class="muted">'+a.date+'</td><td><b>'+a.bond+'</b></td><td><a href="'+a.url+'" target="_blank" style="color:#1a6fb5">'+a.title+'</a></td></tr>').join('')
+    + '</tbody></table>';
+}
+function applyCloud(d){
+  if(!d) return;
+  (d.cb||[]).forEach(o=>{
+    const r = CB.find(c=>c[0]===String(o.code)); if(!r) return;
+    if(+o.price>0) r[5]=+o.price;
+    if(o.chg!=null&&isFinite(+o.chg)) r[6]=+o.chg;
+    if(o.stockChg!=null&&isFinite(+o.stockChg)) r[7]=+o.stockChg;
+    if(+o.convValue>0) r[8]=+o.convValue;
+    if(o.premium!=null&&isFinite(+o.premium)) r[9]=+o.premium;
+    if(+o.amount>0) r[13]=+o.amount;
+  });
+  if(d.ann) ANN = d.ann;
+  if(d.event_base) EVENT_BASE = d.event_base;
+  CLOUD_TIME = d.generated || '';
+  document.getElementById('today').textContent = ' 云端数据 ' + CLOUD_TIME;
+  document.querySelectorAll('.evnote').forEach(el=>el.textContent =
+    '✓ 云端自动维护：行情与公告最后更新 '+CLOUD_TIME+'（每个交易日约 08:30，北京时间）。公告由东方财富公告接口按关键词（赎回/下修/回售/评级/兑付等）自动筛查，重大公告请同时以上交所 / 深交所 / 巨潮资讯网原文为准。');
+  refreshAll();
+}
+async function loadCloud(){
+  try{
+    const r = await fetch('data.json?ts='+Date.now(), {cache:'no-store'});
+    if(r.ok) applyCloud(await r.json());
+  }catch(e){}
+}
+window.addEventListener('resize',()=>{chartDlow();chartRate()});
+refreshAll();
+loadCloud();
+</script>
+</body>
+</html>
